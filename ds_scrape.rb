@@ -2,32 +2,43 @@ require 'rest-client'
 require 'nokogiri'
 require 'json'
 
-# THIS SEEMS TO WORK SO FAR, BUT ISN'T GETTING COMMENTS! Use the questions/{id}/comments
-# API method to get these!
-
-# UPDATE: I don't need to scrape at all! I should just be able to use the API straight up!
-# Between the API and JSON gem, I should be able to easily get all the comments and answers.
-# From there, I can use R to process the shit out of the gathered text!
-
 API_BASE = 'https://api.stackexchange.com/2.2/'
 
-data_science = Nokogiri::HTML(RestClient.get('http://stats.stackexchange.com/questions/195034'))
-comments = RestClient.get(API_BASE + 'questions/195034/comments?site=stats')
+# Retrieve information from the API methods
+question = RestClient.get(API_BASE + 'questions/195034?site=stats&filter=withbody')
+comments = RestClient.get(API_BASE + 'questions/195034/comments?site=stats&filter=withbody')
+answers = RestClient.get(API_BASE + 'questions/195034/answers?site=stats&filter=withbody')
 
-# Extract the question and answer text and list text
-qa_text = data_science.css('.post-text p')
-list_text = data_science.css('.post-text ul li')
+# Parse the returned JSON
+qjson = JSON.parse(question)
+cjson = JSON.parse(comments)
+ajson = JSON.parse(answers)
 
-# Glue text together into a document (order is irrelevant)
-big_text = ''
+# Glue all the text together into a corpus, beginning with question text
+big_text = Nokogiri::HTML(qjson['items'][0]['body']).text + "\n"
 
-# Run for each set of text items, leaving a space between each one
-qa_text.each do |item|
-  big_text = big_text + item.text + "\n"
+# Process the question comments
+comments_list = cjson['items']
+
+comments_list.each do |comment|
+  big_text = big_text + ' ' + Nokogiri::HTML(comment['body']).text + "\n"
 end
 
-list_text.each do |item|
-  big_text = big_text + item.text + "\n"
+# Now process the answers and their comments
+answers_list = ajson['items']
+
+answers_list.each do |answer|
+  big_text = big_text + ' ' + Nokogiri::HTML(answer['body']).text + "\n"
+
+  # Retrieve the comments for each and process those as well
+  answer_comments = RestClient.get(API_BASE + 'answers/' + answer['answer_id'].to_s +
+                                   '/comments?site=stats&filter=withbody')
+
+  aclistjson = JSON.parse(answer_comments)
+
+  aclistjson['items'].each do |acomment|
+    big_text = big_text + ' ' + Nokogiri::HTML(acomment['body']).text + "\n"
+  end
 end
 
 File.open('qa_output.txt', 'w') do |file|

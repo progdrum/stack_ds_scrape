@@ -1,0 +1,6 @@
+# Ignore output files
+*.txt
+
+# Ignore temp files
+*~
+
