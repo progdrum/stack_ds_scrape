@@ -3,11 +3,14 @@ require 'nokogiri'
 require 'json'
 
 API_BASE = 'https://api.stackexchange.com/2.2/'
+QUESTION_ID = ARGV[0]
+
+raise 'No question ID specified!' if QUESTION_ID.nil?
 
 # Retrieve information from the API methods
-question = RestClient.get(API_BASE + 'questions/195034?site=stats&filter=withbody')
-comments = RestClient.get(API_BASE + 'questions/195034/comments?site=stats&filter=withbody')
-answers = RestClient.get(API_BASE + 'questions/195034/answers?site=stats&filter=withbody')
+question = RestClient.get(API_BASE + "questions/#{QUESTION_ID}?site=stats&filter=withbody")
+comments = RestClient.get(API_BASE + "questions/#{QUESTION_ID}/comments?site=stats&filter=withbody")
+answers = RestClient.get(API_BASE + "questions/#{QUESTION_ID}/answers?site=stats&filter=withbody")
 
 # Parse the returned JSON
 qjson = JSON.parse(question)
