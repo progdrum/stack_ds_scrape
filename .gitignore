@@ -4,3 +4,6 @@
 # Ignore temp files
 *~
 
+# Ignore RData
+.Rdata
+
