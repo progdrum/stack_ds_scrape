@@ -14,3 +14,9 @@ read_and_pp <- function(tpath) {
   text_data <- tm_map(text_data, stripWhitespace)
   text_data <- tm_map(text_data, PlainTextDocument)
 }
+
+# Read plain text pre-process as necessary
+read_pt_and_pp <- function(tpath) {
+  orig_text <- paste(readLines(tpath), collapse = "\n")
+  processed_text <- gsub("[[:punct:]]|[0-9]|[\n]", " ", orig_text)
+}
